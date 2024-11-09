@@ -1,0 +1,207 @@
+" Basic settings
+set number		" Show line numbers
+set relativenumber	" Show relative line numbers
+set tabstop=4		" Set tab to 4 spaces
+set shiftwidth=4	" Set indentation to 4 spaces
+set expandtab		" Use space instead of tabs
+set autoindent		" Automatic indentation
+set cursorline		" Highlight current line
+set linespace=12    " Set line-height
+
+" Manage plugins with Vim-Plug
+call plug#begin('~/.config/nvim/plugged')
+
+" Plugins
+Plug 'neovim/nvim-lspconfig'					            " Lsp
+Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}	" BetterHighlight
+Plug 'junegunn/fzf', {'do': { -> fzf#install() } }		    " Fuzzy finder
+Plug 'junegunn/fzf.vim'
+Plug 'tpope/vim-fugitive'					                " Git
+Plug 'preservim/nerdtree'					                " File explorer
+Plug 'nvim-telescope/telescope.nvim', {'tag': '0.1.0'}
+Plug 'nvim-lua/plenary.nvim'					            " Telescope
+Plug 'williamboman/mason.nvim'					            " Manager for LSP, DAP, linters and formatter
+Plug 'williamboman/mason-lspconfig.nvim'			        " Dedicated Mason LSP
+Plug 'jwalton512/vim-blade'					                " Blade files
+
+Plug 'hrsh7th/nvim-cmp'			                            " Autocompletamento
+Plug 'hrsh7th/cmp-nvim-lsp'		                            " Fonte per LSP
+Plug 'L3MON4D3/LuaSnip'			                            " Snippets
+Plug 'saadparwaiz1/cmp_luasnip'		                        " Fonte per snippets
+Plug 'hrsh7th/nvim-cmp'                                     " Plugin principale per l'autocompletamento
+Plug 'hrsh7th/cmp-nvim-lsp'                                 " Fonte per LSP
+Plug 'L3MON4D3/LuaSnip'                                     " Motore di snippet
+Plug 'saadparwaiz1/cmp_luasnip'                             " Fonte per snippet LuaSnip
+
+" Git
+Plug 'lewis6991/gitsigns.nvim'		                        " Git support
+Plug 'nvim-lualine/lualine.nvim'	                        " Git bar
+
+" Themes
+Plug 'morhetz/gruvbox'
+Plug 'joshdick/onedark.vim'
+Plug 'catppuccin/nvim', { 'as': 'catppuccin' }
+Plug 'EdenEast/nightfox.nvim'
+Plug 'Shatur/neovim-ayu'
+Plug 'rose-pine/neovim', { 'as': 'rose-pine' }
+
+" UX
+Plug 'karb94/neoscroll.nvim'                                " Smooth scroll
+Plug 'tpope/vim-surround'                                   " Replace around words
+Plug 'ryanoasis/vim-devicons'                               " NERD Tree Sitter icons
+Plug 'Xuyuanp/nerdtree-file-dir-setup'                      " Sync NERD Tree Sitter position
+Plug 'folke/which-key.nvim'                                 " Display custom keymaps
+
+call plug#end()
+
+"Themes settings
+colorscheme rose-pine
+
+" UI
+" Set transparent background
+if has("gui_running")
+  set transparent
+else
+  augroup TransparentBackground
+    autocmd!
+    autocmd VimEnter * hi Normal guibg=NONE ctermbg=NONE
+  augroup END
+endif
+
+" Autocomplete snippets
+lua << EOF
+-- Controlla che Mason sia installato e configurato
+require("mason").setup()
+require("mason-lspconfig").setup({
+    ensure_installed = { "ts_ls", "intelephense", "vuels" }
+})
+
+-- Ensure those are installed
+local lspconfig = require('lspconfig')
+lspconfig.ts_ls.setup{}			            -- TypeScript e JavaScript
+lspconfig.intelephense.setup{}		        -- PHP
+lspconfig.vuels.setup{}			            -- Vue.js
+
+local cmp = require'cmp'
+cmp.setup({
+    snippet = {
+        expand = function(args)
+            require('luasnip').lsp_expand(args.body)
+        end,
+    },
+    mapping = cmp.mapping.preset.insert({
+        ['<C-b>'] = cmp.mapping.scroll_docs(-4),
+        ['<C-f>'] = cmp.mapping.scroll_docs(4),
+        ['<C-Space>'] = cmp.mapping.complete(),
+        ['<C-e>'] = cmp.mapping.abort(),
+        ['<CR>'] = cmp.mapping.confirm({ select = true }), 
+    }),
+    sources = cmp.config.sources({
+        { name = 'nvim_lsp' },
+        { name = 'luasnip' },
+    }, {
+        { name = 'buffer' },
+    })
+})
+
+require'lspconfig'.intelephense.setup{}
+
+require('gitsigns').setup {
+    signs = {
+        add          = { text = '+' },
+        change       = { text = '│' },
+        delete       = { text = '-' },
+        topdelete    = { text = '‾' },
+        changedelete = { text = '~' },
+    },
+    numhl = true,
+    linehl = false,
+    word_diff = false,
+    watch_gitdir = { interval = 1000 },
+    current_line_blame = true,
+    sign_priority = 6,
+    update_debounce = 100,
+    status_formatter = nil,
+}
+
+-- Set GitSigns highlighter
+vim.api.nvim_set_hl(0, 'GitSignsAdd', { link = 'GitGutterAdd' })
+vim.api.nvim_set_hl(0, 'GitSignsAddLn', { link = 'GitGutterAdd' })
+vim.api.nvim_set_hl(0, 'GitSignsAddNr', { link = 'GitGutterAdd' })
+
+vim.api.nvim_set_hl(0, 'GitSignsChange', { link = 'GitGutterChange' })
+vim.api.nvim_set_hl(0, 'GitSignsChangeLn', { link = 'GitGutterChange' })
+vim.api.nvim_set_hl(0, 'GitSignsChangeNr', { link = 'GitGutterChange' })
+
+vim.api.nvim_set_hl(0, 'GitSignsDelete', { link = 'GitGutterDelete' })
+vim.api.nvim_set_hl(0, 'GitSignsDeleteLn', { link = 'GitGutterDelete' })
+vim.api.nvim_set_hl(0, 'GitSignsDeleteNr', { link = 'GitGutterDelete' })
+
+vim.api.nvim_set_hl(0, 'GitSignsTopdelete', { link = 'GitGutterDeleteChange' })
+vim.api.nvim_set_hl(0, 'GitSignsTopdeleteLn', { link = 'GitGutterDeleteChange' })
+vim.api.nvim_set_hl(0, 'GitSignsTopdeleteNr', { link = 'GitGutterDeleteChange' })
+
+vim.api.nvim_set_hl(0, 'GitSignsChangedelete', { link = 'GitGutterChangeDelete' })
+vim.api.nvim_set_hl(0, 'GitSignsChangedeleteLn', { link = 'GitGutterChangeDelete' })
+vim.api.nvim_set_hl(0, 'GitSignsChangedeleteNr', { link = 'GitGutterChangeDelete' })
+
+require('lualine').setup {
+    sections = {
+        lualine_b = { 'branch', 'diff', 'diagnostics' },
+    }
+}
+
+require('neoscroll').setup({
+  mappings = {                          -- Keys to be mapped to their corresponding default scrolling animation
+    '<C-u>', '<C-d>',
+    '<C-b>', '<C-f>',
+    '<C-y>', '<C-e>',
+    'zt', 'zz', 'zb',
+  },
+  hide_cursor = true,                   -- Hide cursor while scrolling
+  stop_eof = true,                      -- Stop at <EOF> when scrolling downwards
+  respect_scrolloff = false,            -- Stop scrolling when the cursor reaches the scrolloff margin of the file
+  cursor_scrolls_alone = true,          -- The cursor will keep on scrolling even if the window cannot scroll further
+  easing = 'linear',                    -- Default easing function
+  pre_hook = nil,                       -- Function to run before the scrolling animation starts
+  post_hook = nil,                      -- Function to run after the scrolling animation ends
+  performance_mode = false,             -- Disable "Performance Mode" on all buffers.
+  ignored_events = {                    -- Events ignored while scrolling
+      'WinScrolled', 'CursorMoved'
+  },
+})
+
+EOF
+
+" NERD Sync
+let NERDTreeDirArrowExpandable = '▶'
+let NERDTreeDirArrowCollapsible = '▼'
+let g:nerdtree_tabs_open_on_console_startup = 1
+let g:nerdtree_show_hidden = 1
+let g:nerdtree_file_dir_setup = 1
+
+" Shortcuts
+
+" Set leader key to space
+let mapleader = " "
+
+" Space + f + f for open files
+nnoremap <leader>ff :Files<CR>
+
+" Space + f + b show open buffer
+nnoremap <leader>fb :Buffers<CR>
+
+" Space + f + g search Git files
+nnoremap <leader>fg :GFiles<CR>
+
+" Space + f + l search lines in project
+nnoremap <leader>fl :Lines<CR>
+
+" Space + e open nerd tree
+nnoremap <leader>e :NERDTreeToggle<CR>
+
+" Add zz to <C-d>
+nnoremap <C-d> <C-d>zz
+
+" Add zz to <C-u>
+nnoremap <C-u> <C-u>zz
